@@ -1,0 +1,22 @@
+services:
+  api:
+    container_name: dj_admin_api
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - 8000:8000
+    volumes:
+      - '.:/app'
+    depends_on:
+      - db
+  db:
+    container_name: dj_admin_db
+    image: postgres:15.3
+    restart: always
+    env_file:
+      - ./.env
+    volumes:
+      - ./.pgdata:/var/lib/postgresql/data # Volume for persisting PostgreSQL data
+    ports:
+      - 54324:5432
