@@ -1,9 +1,12 @@
 import traceback
 from decouple import config
 from django.db import IntegrityError
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import exceptions, status
+
+from users.authentication import generate_access_token
 
 from .models import User
 from .serializers import UserSerializer
@@ -55,6 +58,42 @@ def register(request):
         if config('DEBUG', cast=bool):
             traceback.print_exc()
         return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def login(request):
+    data = request.data
+
+    if 'email' in data:
+        try:
+            user = User.objects.get(email=data['email'].lower())
+        except ObjectDoesNotExist:
+            return Response({"message": "Invalid credentials!"}, status=status.HTTP_400_BAD_REQUEST)
+    elif 'username' in data:
+        try:
+            user = User.objects.get(username=data['username'].lower())
+        except ObjectDoesNotExist:
+            return Response({"message": "Invalid credentials!"}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({"message": "Invalid credentials!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+    password = request.data.get('password')
+    remember_me = data.get('rememberMe', False)
+    
+    if user is None:
+        return Response({"message": "Invalid Credentials"}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not user.check_password(password):
+        return Response({"message": "Invalid Credentials"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    response = Response()
+    
+    token = generate_access_token(user.id, remember_me)
+    response.set_cookie(key='user_session', value=token, httponly=True)
+    response.data = {
+        'jwt': token
+    }
+    
+    return response
 
 # Create your views here.
 @api_view(['GET'])

@@ -77,6 +77,12 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'users.exception_handler.custom_exception_handler'
 }
 
+AUTHENTICATION_BACKENDS = [
+    'users.authentication_backends.EmailOrUsernameModelBackend',
+    # You can keep Django's default backend for fallback
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
