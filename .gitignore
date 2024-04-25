@@ -111,3 +111,6 @@ GitHub.sublime-settings
 
 # Django stuff:
 local_settings.py
+
+# Docker database
+.pgdata/

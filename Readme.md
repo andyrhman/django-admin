@@ -6,7 +6,7 @@
 
 ## Introduction
 
-This is my 1st project of django web framework, i am so exited to learn this awesome python api framework.
+This is my 2nd project of django web framework, no that i know mostly on how this django structure api works and in this project i want to sharpen my skill again to study more on how this api works with admin api project.
 
 ## First Time Set Up & Configuration
 
