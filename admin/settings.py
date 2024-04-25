@@ -143,7 +143,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # ? Default user value
 
-# AUTH_USER_MODEL = 'core.User'
+AUTH_USER_MODEL = 'users.User'
 
 # Cors
 

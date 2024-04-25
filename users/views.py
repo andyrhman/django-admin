@@ -1,5 +1,6 @@
 import traceback
 from decouple import config
+from django.db import IntegrityError
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import exceptions, status
@@ -20,15 +21,29 @@ def register(request):
 
         serializer = UserSerializer(data=data)
 
-        # * Validation check
+        # * Validation
         try:
+            
             serializer.is_valid(raise_exception=True)
+            
+            serializer.save()
+            
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        except IntegrityError as e:
+        
+            if 'email' in str(e):
+                return Response({"message": "This email already exists."}, status=status.HTTP_400_BAD_REQUEST)
+            elif 'username' in str(e):
+                return Response({"message": "This username already exists."}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"message": "Data integrity error."}, status=status.HTTP_400_BAD_REQUEST)
+        
         except exceptions.ValidationError as e:
             # Generate a more user-friendly message that includes the field name
-            errors = {key: value[0] for key, value in e.detail.items()}  # Create a dictionary of field: first_error
-            first_field = next(iter(errors))  # Get the first field with an error
-            field_name = first_field.replace('_', ' ').capitalize()  # Make field name more readable
-            # Customize error messages for common cases
+            errors = {key: value[0] for key, value in e.detail.items()}
+            first_field = next(iter(errors))
+            field_name = first_field.replace('_', ' ').capitalize()
             if 'required' in errors[first_field]:
                 message = f"{field_name} is required."
             elif 'already exists' in errors[first_field]:
@@ -36,10 +51,6 @@ def register(request):
             else:
                 message = f"{field_name} error: {errors[first_field]}"
             return Response({"message": message}, status=status.HTTP_400_BAD_REQUEST)
-        
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
     except Exception:
         if config('DEBUG', cast=bool):
             traceback.print_exc()

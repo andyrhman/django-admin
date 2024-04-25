@@ -1,3 +1,4 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 import uuid
 
@@ -12,7 +13,7 @@ python manage.py migrate
 """
 
 # Create your models here.
-class User(models.Model):
+class User(AbstractUser):
     # ? https://stackoverflow.com/questions/61464113/django-db-utils-programmingerror-cannot-cast-type-uuid-to-integer
     """
     1) add temp_id = models.UUIDField(default=uuid.uuid4) to your model, then run makemigrations
@@ -31,4 +32,6 @@ class User(models.Model):
     username = models.CharField(max_length=255, unique=True)
     password = models.CharField(max_length=255)
     
+    first_name = None
+    last_name = None
     USERNAME_FIELD = 'username'
