@@ -107,15 +107,35 @@ def users(request):
         if config('DEBUG', cast=bool):
             traceback.print_exc()
         return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
+@api_view(['POST'])
+def logout(_):
+    try:    
+        response = Response()
+        response.delete_cookie(key='user_session')
+        response.data = {
+            "message": "success"
+        }
+        
+        return response
+    except Exception as e:
+        if config('DEBUG', cast=bool):
+            print(e)
+        return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)
+
 class AuthenticatedUser(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        serializer = UserSerializer(request.user)
-        
-        return Response(serializer.data)
+        try:
+            serializer = UserSerializer(request.user)
+            
+            return Response(serializer.data)
+        except Exception:
+            if config('DEBUG', cast=bool):
+                traceback.print_exc()
+            return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)
     
     
     
