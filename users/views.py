@@ -5,13 +5,13 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import exceptions, status
+from rest_framework import exceptions, status, viewsets
 from rest_framework.views import APIView
 
 from users.authentication import JWTAuthentication, generate_access_token
 
-from .models import Permission, User
-from .serializers import PermissionSerializer, UserSerializer
+from .models import Permission, Role, User
+from .serializers import PermissionSerializer, RoleSerializer, UserSerializer
 
 @api_view(['POST'])
 def register(request):
@@ -140,7 +140,49 @@ class PermissionAPIView(APIView):
                 traceback.print_exc()
             return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)
     
+class RoleViewSet(viewsets.ViewSet):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
+    def list(self, request):
+        try:
+            serializer = RoleSerializer(Role.objects.all(), many=True)
+            
+            return Response(serializer.data)
+        except Exception:
+            if config('DEBUG', cast=bool):
+                traceback.print_exc()
+            return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)    
     
+    def create(self, request):
+        try:
+            pass
+        except Exception:
+            if config('DEBUG', cast=bool):
+                traceback.print_exc()
+            return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)      
     
+    def retrieve(self, request):
+        try:
+            pass
+        except Exception:
+            if config('DEBUG', cast=bool):
+                traceback.print_exc()
+            return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)    
+          
+    def update(self, request):
+        try:
+            pass
+        except Exception:
+            if config('DEBUG', cast=bool):
+                traceback.print_exc()
+            return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)  
+        
+    def destroy(self, request):
+        try:
+            pass
+        except Exception:
+            if config('DEBUG', cast=bool):
+                traceback.print_exc()
+            return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)  
     
