@@ -13,6 +13,13 @@ python manage.py migrate
 """
 
 # Create your models here.
+class Permission(models.Model):
+    name = models.CharField(max_length=200)
+    
+class Role(models.Model):
+    name = models.CharField(max_length=200)
+    permissions = models.ManyToManyField(Permission)
+
 class User(AbstractUser):
     # ? https://stackoverflow.com/questions/61464113/django-db-utils-programmingerror-cannot-cast-type-uuid-to-integer
     """
@@ -31,6 +38,7 @@ class User(AbstractUser):
     email = models.CharField(max_length=255, unique=True)
     username = models.CharField(max_length=255, unique=True)
     password = models.CharField(max_length=255)
+    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True)
     
     first_name = None
     last_name = None

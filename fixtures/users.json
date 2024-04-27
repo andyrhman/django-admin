@@ -1,0 +1,56 @@
+[
+    {
+      "model": "users.user",
+      "pk": "4234ace9-1ddb-467d-ae81-f1af5f51162c",
+      "fields": {
+        "last_login": null,
+        "is_superuser": true,
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2024-04-25 20:13:27.110213+08",
+        "fullName": "Admin",
+        "username": "admin",
+        "email": "admin@admin.com",
+        "password": "argon2$argon2id$v=19$m=102400,t=2,p=8$WmNER3FNYmE3VTZvUWpRbExmU2xsQg$+hNaHug6QgADXWDJSAgc9mv74SZdipeIwoGeRZE98dU",
+        "role": 1,
+        "groups": [],
+        "user_permissions": []
+      }
+    },
+    {
+      "model": "users.user",
+      "pk": "81b92e57-5293-4ddc-85b3-fdb5a66b340e",
+      "fields": {
+        "last_login": null,
+        "is_superuser": true,
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2024-04-25 19:59:09.050861+08",
+        "username": "editor",
+        "fullName": "Editor",
+        "email": "editor@editor.com",
+        "password": "argon2$argon2id$v=19$m=102400,t=2,p=8$YmpJQ01PQXhvMDhTcTFPYnh3MXAzOA$jFHP0qz/62ZhBA44D+k6oZxrg7wiK01M8q2XoVP2gYE",
+        "role": 2,
+        "groups": [],
+        "user_permissions": []
+      }
+    },
+    {
+      "model": "users.user",
+      "pk": "377bcc28-e091-4abf-b647-f18dcd5ecf45",
+      "fields": {
+        "last_login": null,
+        "is_superuser": true,
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2024-04-25 19:05:26.259882+08",
+        "username": "viewer",
+        "fullName": "Viewer",
+        "email": "viewer@viewer.com",
+        "password": "argon2$argon2id$v=19$m=102400,t=2,p=8$SlN3WVcyWDJ6TlpzaWl0SWxLMEZKZQ$CGuZDjEFVXwM5/c6jCBfVOdS4aBCvqnqLbzegIfkIk8",
+        "role": 3,
+        "groups": [],
+        "user_permissions": []
+      }
+    }
+  ]
