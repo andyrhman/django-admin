@@ -4,9 +4,11 @@ from django.db import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import exceptions, status
+from rest_framework.views import APIView
 
-from users.authentication import generate_access_token
+from users.authentication import JWTAuthentication, generate_access_token
 
 from .models import User
 from .serializers import UserSerializer
@@ -95,7 +97,6 @@ def login(request):
     
     return response
 
-# Create your views here.
 @api_view(['GET'])
 def users(request):
     try:
@@ -106,3 +107,19 @@ def users(request):
         if config('DEBUG', cast=bool):
             traceback.print_exc()
         return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)
+    
+class AuthenticatedUser(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        
+        return Response(serializer.data)
+    
+    
+    
+    
+    
+    
+    
