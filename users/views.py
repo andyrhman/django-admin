@@ -156,7 +156,27 @@ class RoleViewSet(viewsets.ViewSet):
     
     def create(self, request):
         try:
-            pass
+            serializer = RoleSerializer(data=request.data)
+
+            serializer.is_valid(raise_exception=True)
+            
+            serializer.save()
+            
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+        except exceptions.ValidationError as e:
+            # Generate a more user-friendly message that includes the field name
+            errors = {key: value[0] for key, value in e.detail.items()}
+            first_field = next(iter(errors))
+            field_name = first_field.replace('_', ' ').capitalize()
+            if 'required' in errors[first_field]:
+                message = f"{field_name} is required."
+            elif 'already exists' in errors[first_field]:
+                message = f"{field_name.lower()} already exists."
+            else:
+                message = f"{field_name} error: {errors[first_field]}"
+            return Response({"message": message}, status=status.HTTP_400_BAD_REQUEST)
+        
         except Exception:
             if config('DEBUG', cast=bool):
                 traceback.print_exc()
