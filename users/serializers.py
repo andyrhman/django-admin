@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import User
+from .models import Permission, User
 
 class UserSerializer(serializers.ModelSerializer):
     # Adding a field for 'fullname' and map it to 'fullName' in the model
@@ -30,3 +30,12 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance
+    
+
+class PermissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Permission
+        fields = "__all__"
+        
+        
+        

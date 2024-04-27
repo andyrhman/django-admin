@@ -10,8 +10,8 @@ from rest_framework.views import APIView
 
 from users.authentication import JWTAuthentication, generate_access_token
 
-from .models import User
-from .serializers import UserSerializer
+from .models import Permission, User
+from .serializers import PermissionSerializer, UserSerializer
 
 @api_view(['POST'])
 def register(request):
@@ -97,17 +97,6 @@ def login(request):
     
     return response
 
-@api_view(['GET'])
-def users(request):
-    try:
-        users = User.objects.all()
-        serializer = UserSerializer(users, many=True)
-        return Response(serializer.data)
-    except Exception:
-        if config('DEBUG', cast=bool):
-            traceback.print_exc()
-        return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)
-
 @api_view(['POST'])
 def logout(_):
     try:    
@@ -137,7 +126,19 @@ class AuthenticatedUser(APIView):
                 traceback.print_exc()
             return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)
     
+class PermissionAPIView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
+    def get(self, request):
+        try:
+            serializer = PermissionSerializer(Permission.objects.all(), many=True)
+            
+            return Response(serializer.data)
+        except Exception:
+            if config('DEBUG', cast=bool):
+                traceback.print_exc()
+            return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)
     
     
     
