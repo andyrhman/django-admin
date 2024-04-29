@@ -2,10 +2,11 @@ import traceback
 from decouple import config
 from django.db import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
+from requests import get
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import exceptions, status, viewsets
+from rest_framework import exceptions, generics, mixins, status, viewsets
 from rest_framework.views import APIView
 
 from users.authentication import JWTAuthentication, generate_access_token
@@ -24,38 +25,38 @@ def register(request):
         if data['password'] != data['password_confirm']:
             return Response({"message": "Passwords do not match"}, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = UserSerializer(data=data)
+        # ? Pass the request context to the serializer
+        # ! delete the context if you use PATCH for updating partial data instead of PUT
+        serializer = UserSerializer(data=data, context={'request': request})
 
-        # * Validation
-        try:
-            
-            serializer.is_valid(raise_exception=True)
-            
-            serializer.save()
-            
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        serializer.is_valid(raise_exception=True)
         
-        except IntegrityError as e:
+        serializer.save()
         
-            if 'email' in str(e):
-                return Response({"message": "This email already exists."}, status=status.HTTP_400_BAD_REQUEST)
-            elif 'username' in str(e):
-                return Response({"message": "This username already exists."}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                return Response({"message": "Data integrity error."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
         
-        except exceptions.ValidationError as e:
-            # Generate a more user-friendly message that includes the field name
-            errors = {key: value[0] for key, value in e.detail.items()}
-            first_field = next(iter(errors))
-            field_name = first_field.replace('_', ' ').capitalize()
-            if 'required' in errors[first_field]:
-                message = f"{field_name} is required."
-            elif 'already exists' in errors[first_field]:
-                message = f"{field_name.lower()} already exists."
-            else:
-                message = f"{field_name} error: {errors[first_field]}"
-            return Response({"message": message}, status=status.HTTP_400_BAD_REQUEST)
+    except IntegrityError as e:
+    
+        if 'email' in str(e):
+            return Response({"message": "This email already exists."}, status=status.HTTP_400_BAD_REQUEST)
+        elif 'username' in str(e):
+            return Response({"message": "This username already exists."}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"message": "Data integrity error."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    except exceptions.ValidationError as e:
+        # Generate a more user-friendly message that includes the field name
+        errors = {key: value[0] for key, value in e.detail.items()}
+        first_field = next(iter(errors))
+        field_name = first_field.replace('_', ' ').capitalize()
+        if 'required' in errors[first_field]:
+            message = f"{field_name} is required."
+        elif 'already exists' in errors[first_field]:
+            message = f"{field_name.lower()} already exists."
+        else:
+            message = f"{field_name} error: {errors[first_field]}"
+        return Response({"message": message}, status=status.HTTP_400_BAD_REQUEST)
+    
     except Exception:
         if config('DEBUG', cast=bool):
             traceback.print_exc()
@@ -215,4 +216,49 @@ class RoleViewSet(viewsets.ViewSet):
             if config('DEBUG', cast=bool):
                 traceback.print_exc()
             return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)  
+    
+class UserGenericAPIView(
+    generics.GenericAPIView, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin
+):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]    
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    def get(self, request, pk=None):
+        if pk:
+            return Response(self.retrieve(request, pk).data)
+        
+        return Response(self.list(request).data)
+    
+    def post(self, request):
+        return Response(self.create(request).data)
+    
+    def put(self, request, pk=None):
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance, data=request.data, partial=True)  # Allow partial updates
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+        
+        except IntegrityError as e:
+        
+            if 'email' in str(e):
+                return Response({"message": "This email already exists."}, status=status.HTTP_400_BAD_REQUEST)
+            elif 'username' in str(e):
+                return Response({"message": "This username already exists."}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"message": "Data integrity error."}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            if config('DEBUG', cast=bool):
+                traceback.print_exc()
+            return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    def patch(self, request, pk=None):
+        return self.partial_update(request, pk)
+    
+    def delete(self, request, pk=None):
+        return Response(self.destroy(request, pk))
     

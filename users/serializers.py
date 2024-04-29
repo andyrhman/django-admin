@@ -31,6 +31,31 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
     
+    def update(self, instance, validated_data):
+        # Convert email and username to lowercase if they are in the validated_data
+        if 'email' in validated_data:
+            validated_data['email'] = validated_data['email'].lower()
+        if 'username' in validated_data:
+            validated_data['username'] = validated_data['username'].lower()
+
+        # Update other fields if included in the validated_data
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
+
+    def to_representation(self, instance):
+        """ Modify the output to remove 'password' field from the response. """
+        ret = super().to_representation(instance)
+        ret.pop('password', None)
+        return ret
+
+    def validate(self, data):
+        """ Customize validation based on the request method. """
+        if self.context['request'].method in ['PUT', 'PATCH']:
+            data.pop('password', None)  # Remove password from data if present
+        return data
 class PermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Permission

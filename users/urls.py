@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 
-from .views import AuthenticatedUser, PermissionAPIView, RoleViewSet, logout, register, login
+from .views import AuthenticatedUser, PermissionAPIView, RoleViewSet, UserGenericAPIView, logout, register, login
 
 urlpatterns = [
     path("register", register),
@@ -18,4 +18,6 @@ urlpatterns = [
         'put': 'update',
         'delete': 'destroy'
     })),
+    path('users', UserGenericAPIView.as_view()),
+    path('users/<str:pk>', UserGenericAPIView.as_view())
 ]
