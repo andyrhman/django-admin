@@ -2,7 +2,6 @@ import traceback
 from decouple import config
 from django.db import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
-from requests import get
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
@@ -13,7 +12,7 @@ from admin.pagination import CustomPagination
 from users.authentication import JWTAuthentication, generate_access_token
 
 from .models import Permission, Role, User
-from .serializers import PermissionSerializer, RoleSerializer, UserSerializer
+from .serializers import PermissionSerializer, RoleSerializer, UserSerializer, UserUpdatePasswordSerializer
 
 @api_view(['POST'])
 def register(request):
@@ -315,4 +314,66 @@ class UserGenericAPIView(
             if config('DEBUG', cast=bool):
                 traceback.print_exc()
             return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)
+    
+class ProfileInfoAPIView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]    
+    
+    def put(self, request, pk=None):
+        try:
+            user = request.user
+            serializer = UserSerializer(user, data=request.data, context={'request': request}, partial=True)  # Allow partial updates
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+        
+        except IntegrityError as e:
+        
+            if 'email' in str(e):
+                return Response({"message": "This email already exists."}, status=status.HTTP_400_BAD_REQUEST)
+            elif 'username' in str(e):
+                return Response({"message": "This username already exists."}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"message": "Data integrity error."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        except exceptions.ValidationError as e:
+            # Generate a more user-friendly message that includes the field name
+            errors = {key: value[0] for key, value in e.detail.items()}
+            first_field = next(iter(errors))
+            field_name = first_field.replace('_', ' ').capitalize()
+            if 'already exists' in errors[first_field]:
+                message = f"{field_name.lower()} already exists."
+            else:
+                message = f"{field_name} error: {errors[first_field]}"
+            return Response({"message": message}, status=status.HTTP_400_BAD_REQUEST)
+        
+        except Exception:
+            if config('DEBUG', cast=bool):
+                traceback.print_exc()
+            return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)
+
+class ProfilePasswordAPIView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]    
+    def put(self, request, pk=None):
+        try:
+            user = request.user
+            
+            if request.data["password"] != request.data["password_confirm"]:
+                return Response({'message': 'Password do not match'}, status=status.HTTP_400_BAD_REQUEST)
+
+            serializer = UserUpdatePasswordSerializer(user, data=request.data, partial=True)  # Allow partial updates
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response({"message": "Password Successfully Updated"}, status=status.HTTP_202_ACCEPTED)
+
+        except Exception:
+            if config('DEBUG', cast=bool):
+                traceback.print_exc()
+            return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+    
+    
+    
     

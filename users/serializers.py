@@ -66,6 +66,7 @@ class UserSerializer(serializers.ModelSerializer):
         if self.context['request'].method in ['PUT', 'PATCH']:
             data.pop('password', None)  # Remove password from data if present
         return data
+    
 class PermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Permission
@@ -96,3 +97,19 @@ class RoleSerializer(serializers.ModelSerializer):
         instance.permissions.add(*permissions)
         instance.save()
         return instance
+    
+class UserUpdatePasswordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'password']
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }    
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        if password is not None:
+            instance.set_password(password)
+        instance.save()
+        return instance    
+    
