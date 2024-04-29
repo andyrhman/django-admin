@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import exceptions, generics, mixins, status, viewsets
 from rest_framework.views import APIView
 
+from admin.pagination import CustomPagination
 from users.authentication import JWTAuthentication, generate_access_token
 
 from .models import Permission, Role, User
@@ -225,6 +226,7 @@ class UserGenericAPIView(
     permission_classes = [IsAuthenticated]    
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    pagination_class = CustomPagination
 
     def get(self, request, pk=None):
         if pk:
