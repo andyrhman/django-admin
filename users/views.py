@@ -182,25 +182,35 @@ class RoleViewSet(viewsets.ViewSet):
                 traceback.print_exc()
             return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)      
     
-    def retrieve(self, request):
+    def retrieve(self, request, pk=None):
         try:
-            pass
+            role = Role.objects.get(id=pk)
+            serializer = RoleSerializer(role)
+            
+            return Response(serializer.data)
         except Exception:
             if config('DEBUG', cast=bool):
                 traceback.print_exc()
             return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)    
           
-    def update(self, request):
+    def update(self, request, pk=None):
         try:
-            pass
+            role = Role.objects.get(id=pk)
+            serializer = RoleSerializer(instance=role, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
         except Exception:
             if config('DEBUG', cast=bool):
                 traceback.print_exc()
             return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)  
         
-    def destroy(self, request):
+    def destroy(self, request, pk=None):
         try:
-            pass
+            role = Role.objects.get(id=pk)
+            role.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)  
         except Exception:
             if config('DEBUG', cast=bool):
                 traceback.print_exc()
