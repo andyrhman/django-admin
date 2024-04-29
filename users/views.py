@@ -229,21 +229,23 @@ class UserGenericAPIView(
     pagination_class = CustomPagination
 
     def get(self, request, pk=None):
-        if pk:
-            return Response(self.retrieve(request, pk).data)
-        
-        return Response(self.list(request).data)
+        try:
+            if pk:
+                return Response(self.retrieve(request, pk).data)
+            
+            return Response(self.list(request).data)
+        except Exception:
+            if config('DEBUG', cast=bool):
+                traceback.print_exc()
+            return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)
     
     def post(self, request):
-        return Response(self.create(request).data)
-    
-    def put(self, request, pk=None):
         try:
-            instance = self.get_object()
-            serializer = self.get_serializer(instance, data=request.data, partial=True)  # Allow partial updates
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data)
+            request.data.update({
+                "password": "123123",
+                "role": request.data["role_id"]
+            })
+            return Response(self.create(request).data)
         
         except IntegrityError as e:
         
@@ -253,14 +255,64 @@ class UserGenericAPIView(
                 return Response({"message": "This username already exists."}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 return Response({"message": "Data integrity error."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        except exceptions.ValidationError as e:
+            # Generate a more user-friendly message that includes the field name
+            errors = {key: value[0] for key, value in e.detail.items()}
+            first_field = next(iter(errors))
+            field_name = first_field.replace('_', ' ').capitalize()
+            if 'required' in errors[first_field]:
+                message = f"{field_name} is required."
+            elif 'already exists' in errors[first_field]:
+                message = f"{field_name.lower()} already exists."
+            else:
+                message = f"{field_name} error: {errors[first_field]}"
+            return Response({"message": message}, status=status.HTTP_400_BAD_REQUEST)
+        
         except Exception:
             if config('DEBUG', cast=bool):
                 traceback.print_exc()
             return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    def put(self, request, pk=None):
+        try:
+            if request.data["role_id"]:
+                request.data.update({
+                    "role": request.data["role_id"]
+                })
+                
+            return self.partial_update(request, pk)
         
-    def patch(self, request, pk=None):
-        return self.partial_update(request, pk)
+        except IntegrityError as e:
+        
+            if 'email' in str(e):
+                return Response({"message": "This email already exists."}, status=status.HTTP_400_BAD_REQUEST)
+            elif 'username' in str(e):
+                return Response({"message": "This username already exists."}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"message": "Data integrity error."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        except exceptions.ValidationError as e:
+            # Generate a more user-friendly message that includes the field name
+            errors = {key: value[0] for key, value in e.detail.items()}
+            first_field = next(iter(errors))
+            field_name = first_field.replace('_', ' ').capitalize()
+            if 'already exists' in errors[first_field]:
+                message = f"{field_name.lower()} already exists."
+            else:
+                message = f"{field_name} error: {errors[first_field]}"
+            return Response({"message": message}, status=status.HTTP_400_BAD_REQUEST)
+        
+        except Exception:
+            if config('DEBUG', cast=bool):
+                traceback.print_exc()
+            return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, pk=None):
-        return Response(self.destroy(request, pk))
+        try:
+            return Response(self.destroy(request, pk))
+        except Exception:
+            if config('DEBUG', cast=bool):
+                traceback.print_exc()
+            return Response({'message': 'Invalid Request'}, status=status.HTTP_400_BAD_REQUEST)
     

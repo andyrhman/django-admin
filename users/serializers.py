@@ -2,13 +2,23 @@ from rest_framework import serializers
 
 from .models import Permission, Role, User
 
+class RoleRelatedField(serializers.RelatedField):
+    def to_representation(self, value):
+        return RoleSerializer(value).data
+    def to_internal_value(self, data):
+        try:
+            return Role.objects.get(id=data)
+        except Role.DoesNotExist:
+            raise serializers.ValidationError("Permission not found")
+
 class UserSerializer(serializers.ModelSerializer):
+    role = RoleRelatedField(queryset=Role.objects.all(), many=False)
     # Adding a field for 'fullname' and map it to 'fullName' in the model
     fullname = serializers.CharField(source='fullName', max_length=255)
 
     class Meta:
         model = User
-        fields = ['id', 'fullname', 'email', 'username', 'password']
+        fields = ['id', 'fullname', 'email', 'username', 'password', 'role']
         extra_kwargs = {
             'password': {'write_only': True}
         }    
