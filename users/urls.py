@@ -1,4 +1,3 @@
-from django.contrib import admin
 from django.urls import path
 
 from .views import AuthenticatedUser, PermissionAPIView, ProfileInfoAPIView, ProfilePasswordAPIView, RoleViewSet, UserGenericAPIView, logout, register, login
