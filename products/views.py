@@ -19,7 +19,7 @@ class ProductGenericAPIView(
 ):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]    
-    queryset = Product.objects.all()
+    queryset = Product.objects.all().order_by("-updated_at")
     serializer_class = ProductSerializer
     pagination_class = CustomPagination
 
