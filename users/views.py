@@ -93,7 +93,7 @@ def login(request):
     token = generate_access_token(user.id, remember_me)
     response.set_cookie(key='user_session', value=token, httponly=True)
     response.data = {
-        'jwt': token
+        'message': "Successfully logged in!"
     }
     
     return response
@@ -119,9 +119,10 @@ class AuthenticatedUser(APIView):
     
     def get(self, request):
         try:
-            serializer = UserSerializer(request.user)
-            
-            return Response(serializer.data)
+            serializer = UserSerializer(request.user).data
+            # ! This is optional because on node and nestjs there is no permissions name separation
+            serializer["permissions"] = [p["name"] for p in serializer["role"]["permissions"]]
+            return Response(serializer)
         except Exception:
             if config('DEBUG', cast=bool):
                 traceback.print_exc()
