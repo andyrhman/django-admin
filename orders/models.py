@@ -19,6 +19,12 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)  # Automatically set when the object is first created
     updated_at = models.DateTimeField(auto_now=True)      # Automatically set when the object is saved
     
+    """
+        ! if you want to combine first name & last name
+        @property
+        def name(self):
+            return self.first_name + ' ' + self.last_name
+    """
 class OrderItem(models.Model):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
     product_title = models.CharField(max_length=200)
