@@ -11,6 +11,7 @@ from admin.pagination import CustomPagination
 from products.models import Product
 from products.serializers import ProductSerializer
 from users.authentication import JWTAuthentication
+from users.permissions import ViewPermissions
 
 # Create your views here.
 class ProductGenericAPIView(
@@ -18,7 +19,8 @@ class ProductGenericAPIView(
     mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin
 ):
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]    
+    permission_classes = [IsAuthenticated & ViewPermissions]
+    permission_object = "products"
     queryset = Product.objects.all().order_by("-updated_at")
     serializer_class = ProductSerializer
     pagination_class = CustomPagination

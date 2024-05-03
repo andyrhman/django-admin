@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 
 from admin.pagination import CustomPagination
 from users.authentication import JWTAuthentication, generate_access_token
+from users.permissions import ViewPermissions
 
 from .models import Permission, Role, User
 from .serializers import PermissionSerializer, RoleSerializer, UserSerializer, UserUpdatePasswordSerializer
@@ -144,7 +145,8 @@ class PermissionAPIView(APIView):
     
 class RoleViewSet(viewsets.ViewSet):
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated & ViewPermissions]
+    permission_object = "roles"
     
     def list(self, request):
         try:
@@ -223,7 +225,8 @@ class UserGenericAPIView(
     mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin
 ):
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]    
+    permission_classes = [IsAuthenticated & ViewPermissions]
+    permission_object = "users"  
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
     pagination_class = CustomPagination

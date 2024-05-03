@@ -2,7 +2,6 @@ import csv
 import traceback
 from django.db import connection
 from django.http import HttpResponse
-from requests import get
 from rest_framework import generics, mixins, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -12,13 +11,15 @@ from admin.pagination import CustomPagination
 from orders.models import Order, OrderItem
 from orders.serializers import OrderSerializer
 from users.authentication import JWTAuthentication
+from users.permissions import ViewPermissions
 
 # Create your views here.
 class OrderGenericAPIView(
     generics.GenericAPIView, mixins.ListModelMixin, mixins.RetrieveModelMixin
 ):
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]    
+    permission_classes = [IsAuthenticated & ViewPermissions]
+    permission_object = "orders"
     queryset = Order.objects.all().order_by('-updated_at')
     serializer_class = OrderSerializer
     pagination_class = CustomPagination
@@ -36,7 +37,8 @@ class OrderGenericAPIView(
     
 class ExportAPIView(APIView):
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]    
+    permission_classes = [IsAuthenticated & ViewPermissions]
+    permission_object = "orders"
         
     def post(self, request):
         response = HttpResponse(content_type="text/csv")
@@ -58,7 +60,8 @@ class ExportAPIView(APIView):
         
 class ChartAPIView(APIView):
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated & ViewPermissions]
+    permission_object = "orders"
 
     def get(self, _):
         with connection.cursor() as cursor:
