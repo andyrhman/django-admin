@@ -12,7 +12,7 @@ services:
       - db
   db:
     container_name: dj_admin_db
-    image: postgres:15.3
+    image: postgres:alpine
     restart: always
     env_file:
       - ./.env
