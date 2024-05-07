@@ -26,6 +26,9 @@ def register(request):
         if data['password'] != data['password_confirm']:
             return Response({"message": "Passwords do not match"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Set the role ID to 3
+        data['role'] = 3
+        
         # ? Pass the request context to the serializer
         # ! delete the context if you use PATCH for updating partial data instead of PUT
         serializer = UserSerializer(data=data, context={'request': request})
